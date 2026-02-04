@@ -2,6 +2,10 @@
 
 Classic Tetris project updated to run with Python 3 on macOS, Windows, and Linux.
 
+## Demo
+
+<img src="tetris.gif" alt="Tetris gameplay demo" width="420" />
+
 ## Requirements
 
 - Python 3.10+
