@@ -1,16 +1,22 @@
 # A simple classic Tetris game
 
-import pygame, sys, os
-import time
-import random
 import math
+import os
+import random
 import sys
+import time
+from pathlib import Path
+
+import pygame
 from consts import *
+from font_utils import load_font
 from pygame.locals import *
 
 global gameState
 
 GAME_STATE = STATE_PLAY
+BASE_DIR = Path(__file__).resolve().parent.parent
+HIGHSCORE_PATH = BASE_DIR / "highscore.dat"
 
 class FlyingScore():
 
@@ -43,8 +49,8 @@ class PlayField():
 		global COLORS
 		y = 0
 		x = FIELD_X
-		for j in xrange(0,  SCREEN_HEIGHT / STEP_XY):
-			for i in xrange(0, self.floorWidth):
+		for j in range(0,  SCREEN_HEIGHT // STEP_XY):
+			for i in range(0, self.floorWidth):
 				if(self.floor[i+j*self.floorWidth] != 0):
 					# floor
 					pygame.draw.rect(surface, COLORS[self.floor[i+j*self.floorWidth]], pygame.Rect(x, y, STEP_XY, STEP_XY), 0)
@@ -59,12 +65,12 @@ class PlayField():
 	def getVirtualCoords(self, blockRef):
 		""" Returns slice which consists of the field coordinates taken by the current block """
 		self.tmp_slice = []
-		for j in xrange(0, blockRef.sideLen):
-			for i in xrange(0, blockRef.sideLen):
+		for j in range(0, blockRef.sideLen):
+			for i in range(0, blockRef.sideLen):
 				if(blockRef.getForm()[(blockRef.sideLen) * j + i] != 0):
 					# here goes the devil's formula ]:=
 					# don't ask me what it does I dont remember it )
-					self.tmp_slice.append( blockRef.y / STEP_XY * (self.floorWidth) + j * (self.floorWidth) - (FIELD_X / STEP_XY) + blockRef.x / STEP_XY + i )
+					self.tmp_slice.append( blockRef.y // STEP_XY * (self.floorWidth) + j * (self.floorWidth) - (FIELD_X // STEP_XY) + blockRef.x // STEP_XY + i )
 		return(self.tmp_slice)
 
 	def getRow(self, rowNum):
@@ -81,9 +87,9 @@ class PlayField():
 		
 		scoreAdded = 0
 		rowsToDestroy = []
-		for j in xrange ( 0, (SCREEN_HEIGHT / STEP_XY - 1) ):
+		for j in range ( 0, (SCREEN_HEIGHT // STEP_XY - 1) ):
 			needToDestroy = True
-			for i in xrange(0, self.floorWidth):
+			for i in range(0, self.floorWidth):
 				if(self.getRow(j)[i] == 0):
 					# there is a space in a row therefore we can't destroy it
 					needToDestroy = False
@@ -95,7 +101,7 @@ class PlayField():
 		if(len(rowsToDestroy) != 0):
 			sndBlkDestroy.play()
 			# update score
-			for j in xrange(0, len(rowsToDestroy)):
+			for j in range(0, len(rowsToDestroy)):
 				scoreAdded += (j + 1) * 100
 			score += scoreAdded
 			linesDestroyed += len(rowsToDestroy)
@@ -104,27 +110,27 @@ class PlayField():
 				highScore = score
 				updateHighScore()
 			# destroy lines
-			for j in xrange(0, len(rowsToDestroy)):
-				for i in xrange(0, self.floorWidth):
+			for j in range(0, len(rowsToDestroy)):
+				for i in range(0, self.floorWidth):
 					self.floor[rowsToDestroy[j] * self.floorWidth + i] = 0
 			# lift upper rows down
-			for j in xrange(0, len(rowsToDestroy)):
-				for i in xrange(0, rowsToDestroy[j]):
-					for k in xrange(0, self.floorWidth):
+			for j in range(0, len(rowsToDestroy)):
+				for i in range(0, rowsToDestroy[j]):
+					for k in range(0, self.floorWidth):
 						self.floor[(rowsToDestroy[j] - i) * self.floorWidth + k] = self.getRow(rowsToDestroy[j] - 1 - i)[k]
 			return(scoreAdded)
 		return(False)
 	
 	def updateField(self, in_arr, color):
 		""" Updates game field """
-		for m in xrange(0, len(in_arr)):
+		for m in range(0, len(in_arr)):
 			floor[in_arr[m]] = color
 
 	def __init__(self):
 		# initialize floor
-		self.floorWidth = FIELD_WIDTH / STEP_XY
+		self.floorWidth = FIELD_WIDTH // STEP_XY
 		self.floor = []
-		for j in xrange (0, self.floorWidth * SCREEN_HEIGHT / STEP_XY):
+		for j in range (0, self.floorWidth * SCREEN_HEIGHT // STEP_XY):
 			# init walls ->
 			if( (j % self.floorWidth) == 0 ):
 				self.floor.append(1)
@@ -135,8 +141,8 @@ class PlayField():
 			# init walls <-
 			self.floor.append(0)
 			# init floor
-		for j in xrange (0, self.floorWidth):
-			self.floor[j + SCREEN_HEIGHT / STEP_XY * self.floorWidth - self.floorWidth] = 1
+		for j in range (0, self.floorWidth):
+			self.floor[j + SCREEN_HEIGHT // STEP_XY * self.floorWidth - self.floorWidth] = 1
 
 class Tetrix():
 
@@ -202,7 +208,7 @@ class Tetrix():
 		global COLORS
 		self.tmp_y = 0
 		self.tmp_x = 0
-		for j in xrange(1, len(self.getForm())):
+		for j in range(1, len(self.getForm())):
 			if(self.getForm()[j - 1] != 0):
 				pygame.draw.rect(surface, COLORS[self.getForm()[j - 1]], pygame.Rect(self.x + self.tmp_x, self.y + self.tmp_y, STEP_XY, STEP_XY), 0)
 			self.tmp_x += STEP_XY
@@ -230,13 +236,13 @@ class Tetrix():
 				return
 		tmp = self.getForm()[0:len(self.getForm())]
 		# transformations.... groovy
-		for j in xrange(0, self.sideLen):
+		for j in range(0, self.sideLen):
 			tmp_col = []
-			for i in xrange(0, self.sideLen):
+			for i in range(0, self.sideLen):
 				tmp_col.append(tmp[j+self.sideLen*i])
-			for i in xrange(j, self.sideLen):
+			for i in range(j, self.sideLen):
 				self.getForm()[j+self.sideLen*i] = 0
-			for i in xrange(0, self.sideLen):
+			for i in range(0, self.sideLen):
 				self.getForm()[(self.sideLen - 1 -i ) + self.sideLen * j] = tmp_col[i]
 
 	def __init__(self, def_x, def_y, idx = -1):
@@ -265,7 +271,7 @@ def checkCollision(blkRef, blk_x, blk_y, old_x):
 	""" Function checks collision between block and field walls """
 	blkRef.setCoords(blk_x, blk_y)
 	virtualCoords = playArea.getVirtualCoords(blkRef)
-	for j in xrange(0, len(virtualCoords)):
+	for j in range(0, len(virtualCoords)):
 		if(floor[virtualCoords[j]] != 0):
 		    # collision found, restore old coordinates of the block
 			blk_x = old_x
@@ -280,8 +286,8 @@ def showDialog(in_str, centerX, centerY):
 	lbl = bigfont.render(in_str, 1, COLOR_WHITE)
 	width, height = bigfont.size(in_str) 
 	width += 8
-	pygame.draw.rect(screen, COLOR_GRAY, pygame.Rect(centerX - width / 2, centerY - height / 2, width, height), 0)
-	screen.blit(lbl, (centerX - width / 2 + 4, centerY - height / 2))
+	pygame.draw.rect(screen, COLOR_GRAY, pygame.Rect(centerX - width // 2, centerY - height // 2, width, height), 0)
+	screen.blit(lbl, (centerX - width // 2 + 4, centerY - height // 2))
 
 
 def showStats():
@@ -309,23 +315,20 @@ def readHighScore():
 	""" Reads the best score from a file and creates it if needed """
 	global highScore
 	try:
-		f = open("highscore.dat", "rt")
-		highScore = int(f.read())
-	except IOError:
-		f = open("highscore.dat", "wt")
-		f.write(str(0))
+		with open(HIGHSCORE_PATH, "rt", encoding="utf-8") as f:
+			highScore = int(f.read())
+	except (OSError, ValueError):
+		with open(HIGHSCORE_PATH, "wt", encoding="utf-8") as f:
+			f.write(str(0))
 		highScore = 0
-	finally:
-		f.close()
 		
 def updateHighScore():
 	""" Writes a new high score into file """
 	global highScore
 	try:
 		# open file for writing
-		f = open("highscore.dat", "wt")
-		f.write(str(highScore))
-		f.close()
+		with open(HIGHSCORE_PATH, "wt", encoding="utf-8") as f:
+			f.write(str(highScore))
 	except:
 		pass
 	
@@ -374,15 +377,14 @@ window = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 screen = pygame.display.get_surface()
 
 # init sounds
-sndFall = pygame.mixer.Sound(os.path.join("sounds", "sound1.ogg"))
-sndBlkDestroy = pygame.mixer.Sound(os.path.join("sounds", "sound2.ogg"))
-sndRotate = pygame.mixer.Sound(os.path.join("sounds", "sound3.ogg"))
+sndFall = pygame.mixer.Sound(os.path.join(BASE_DIR, "sounds", "sound1.ogg"))
+sndBlkDestroy = pygame.mixer.Sound(os.path.join(BASE_DIR, "sounds", "sound2.ogg"))
+sndRotate = pygame.mixer.Sound(os.path.join(BASE_DIR, "sounds", "sound3.ogg"))
 
 # creating fonts
-fontPath = os.path.join("font", "freesansbold.ttf")
-bigfont = pygame.font.Font(fontPath, 40)
-smallfont = pygame.font.Font(fontPath, 12)
-verysmallfont = pygame.font.Font(fontPath, 7)
+bigfont = load_font(40, BASE_DIR)
+smallfont = load_font(12, BASE_DIR)
+verysmallfont = load_font(7, BASE_DIR)
 
 # render string
 lblScore = smallfont.render("Score: ", 1, COLOR_WHITE)
@@ -399,7 +401,7 @@ while True:
 	updateStartTime = pygame.time.get_ticks()
 
 	if(skipFramesNum <= -1 and gameState == STATE_PLAY):
-		skipFramesNum = int(fallingTime / ((FIELD_HEIGHT / STEP_XY) * (updateTime + updateDelay * 1000)))
+		skipFramesNum = int(fallingTime / ((FIELD_HEIGHT // STEP_XY) * (updateTime + updateDelay * 1000)))
 
 	newCreated = False
 	for event in pygame.event.get(): 
@@ -453,7 +455,7 @@ while True:
 
 	# shows LEVEL dialog for a one second
 	if(showLevelDialog == True and pygame.time.get_ticks() - levelDialogStart <= 1000):
-		showDialog("Level " + str(level), SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+		showDialog("Level " + str(level), SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 	elif(showLevelDialog == True and pygame.time.get_ticks() - levelDialogStart >= 1000):
 		showLevelDialog = False
 
@@ -464,7 +466,7 @@ while True:
 		rotationPossible = True
 		virtualCoords = playArea.getVirtualCoords(curBlock)
 		# check if it is possible to rotate the block
-		for j in xrange(0, len(virtualCoords)):
+		for j in range(0, len(virtualCoords)):
 			if(floor[virtualCoords[j]] != 0):
 				curBlock.typeData = oldState
 				rotationPossible = False
@@ -483,7 +485,7 @@ while True:
 		delayBeforeNextBlock = False
 
 	# check collisions
-	for j in xrange(0, len(virtualCoords)):
+	for j in range(0, len(virtualCoords)):
 		if(floor[virtualCoords[j]] != 0):
 
 			blk_y -= STEP_XY
@@ -509,7 +511,7 @@ while True:
 			curBlock.drawMe(screen)
 			scoreAdded = playArea.destroyRows()
 			if(scoreAdded):
-				offsetX = curBlock.x + int(math.sqrt(len(curBlock.getForm()))) / 2 * STEP_XY
+				offsetX = curBlock.x + int(math.sqrt(len(curBlock.getForm()))) // 2 * STEP_XY
 				if(offsetX + 20 >= (FIELD_X + FIELD_WIDTH)):
 					offsetX -= 20
 				elif(offsetX - 20 <= FIELD_X):
@@ -530,7 +532,7 @@ while True:
 				levelDialogStart = pygame.time.get_ticks()
 				showLevelDialog = True
 				# speed up blocks falling
-				fallingTime = fallingTime - INITIAL_FALLING_TIME / 12
+				fallingTime = fallingTime - INITIAL_FALLING_TIME // 12
 
 			# create a new block
 			blk_y = 0
@@ -544,13 +546,13 @@ while True:
 
 	if(gameState == STATE_GAMEOVER or gameState == STATE_PLAYERWINS or gameState == STATE_GAMEPAUSED):
 		# draw game over string
-		showDialog(strToDisplay, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+		showDialog(strToDisplay, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 		pygame.display.flip()
 		continue
 		
 	# draw flying up score
 	tmpSlice = flyUpScore[0: len(flyUpScore)]
-	for j in xrange(0, len(flyUpScore)):
+	for j in range(0, len(flyUpScore)):
 		flyUpScore[j].drawMe(screen)
 		if(not flyUpScore[j].advance()):
 			del(tmpSlice[j])
